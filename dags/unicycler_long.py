@@ -10,7 +10,7 @@ default_args = {
     'retry_delay': timedelta(minutes=2)
 }
 
-
+# TODO: Update parameter set for running Unicycler long read assembly.
 unicycler_params = {
     'short_1': Param('', description='FASTQ file of first short reads in each pair', type='string'),
     'short_2': Param('', description='FASTQ file of second short reads in each pair', type='string'),
@@ -149,7 +149,8 @@ unicycler_params = {
         maximum=100
     ),
 }
-# TODO: Update Docker image for running Unicycler.
+
+# TODO: Update command for running Unicycler long read assembly.
 with DAG(
     dag_id='Unicycler_short_read_only',
     default_args=default_args,

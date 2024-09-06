@@ -1,0 +1,6 @@
+[submodule "templates/containers/nosograph_assemblers/Unicycler"]
+	path = templates/containers/nosograph_assemblers/Unicycler
+	url = https://github.com/rrwick/Unicycler.git
+[submodule "templates/containers/nosograph_assemblers/racon"]
+	path = templates/containers/nosograph_assemblers/racon
+	url = https://github.com/lbcb-sci/racon
