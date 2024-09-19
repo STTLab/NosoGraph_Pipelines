@@ -118,6 +118,7 @@ services:
 
   dind-service:
     image: docker:dind
+    container_name: dind-service
     privileged: true
     expose:
       - 2376
@@ -125,6 +126,7 @@ services:
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}/certs/ca:/certs/ca
       - ${AIRFLOW_PROJ_DIR:-.}/certs/client:/certs/client
+      - ${AIRFLOW_PROJ_DIR:-.}/data:/data
     hostname: dind-service
 
   airflow-webserver:
