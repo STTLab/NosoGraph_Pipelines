@@ -151,7 +151,7 @@ unicycler_params = {
 }
 # TODO: Update command set for running Unicycler hybrid assembly.
 with DAG(
-    dag_id='Unicycler_short_read_only',
+    dag_id='Unicycler_hybrid',
     default_args=default_args,
     description='This DAG runs Unicycler in a short-read only mode with specified parameters',
     params=unicycler_params,

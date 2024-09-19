@@ -3,6 +3,7 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.docker_operator import DockerOperator
 from airflow.models.param import Param
+from docker.types import Mount
 
 default_args = {
     'owner': 'minamini',
@@ -95,12 +96,12 @@ unicycler_params = {
         description='Highest k-mer size for SPAdes assembly, expressed as a fraction of the read length (default: 0.95)',
         type='number',
     ),
-    'kmer_count': Param(
-        default=8,
-        title='SPAdes Number of k-mer steps',
-        description='Number of k-mer steps to use in SPAdes assembly (default: 8)',
-        type='integer',
-    ),
+    '-+ount': Param(
+     -+ault=8,
+     -+le='SPAdes Number of k-mer steps',
+     -+cription='Number of k-mer steps to use in SPAdes assembly (default: 8)',
+     -+e='integer',
+    )-+
     'automatic_kmers': Param(
         default=True,
         title='SPAdes Automatic k-mer size',
@@ -152,13 +153,14 @@ unicycler_params = {
 
 # TODO: Update command for running Unicycler long read assembly.
 with DAG(
-    dag_id='Unicycler_short_read_only',
+    dag_id='Unicycler_long_read_only',
     default_args=default_args,
     description='This DAG runs Unicycler in a short-read only mode with specified parameters',
     params=unicycler_params,
 ) as dag:
+    v_mounts = [Mount('/data', '/data', type='bind')]
     task1 = DockerOperator(
-        task_id = 'Unicycler_short_read',
+        task_id = 'Unicycler_long_read',
         docker_url='tcp://dind-service:2376',
         tls_verify=True,
         network_mode='bridge',
@@ -166,6 +168,8 @@ with DAG(
         tls_ca_cert='/certs/ca/cert.pem',
         tls_client_cert='/certs/client/cert.pem',
         tls_client_key='/certs/client/key.pem',
+        mount_tmp_dir=False,
+        mounts=v_mounts,
         command='unicycler -1 {{ params.short_1 }} -2 {{ params.short_2 }}'
         '-o {{ params.output_directory }} '
         '--min_fasta_length {{ params.min_fasta_length }} '
