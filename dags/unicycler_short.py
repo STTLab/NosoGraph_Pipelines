@@ -168,7 +168,7 @@ with DAG(
         command='unicycler --version'
     )
     v_mounts = [Mount('/data', '/data', type='bind')]
-    task1 = DockerOperator(
+    assemble = DockerOperator(
         task_id = 'Unicycler_short_read',
         docker_url='tcp://dind-service:2376',
         tls_verify=True,
@@ -187,4 +187,4 @@ with DAG(
             '--linear_seqs {{ params.linear_seqs }}'
         ])
     )
-    check_unicycler >> task1
+    check_unicycler >> assemble
