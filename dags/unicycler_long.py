@@ -12,8 +12,13 @@ default_args = {
 }
 
 unicycler_params = {
-    'long_fq': Param('', description='FASTQ or FASTA file of long reads', type='string'),
+    'long_fq': Param(
+        default='',
+        description='FASTQ or FASTA file of long reads',
+        type='string'
+    ),
     'output_directory': Param(
+        default='',
         title='Output directory',
         description='Output directory (required)',
         type='string'
@@ -84,17 +89,20 @@ unicycler_params = {
         type='boolean'
     ),
     'contamination': Param(
+        default=None,
         title='FASTA file of known contamination',
         description='FASTA file of known contamination in long reads',
         type=['null', 'string']
     ),
     'scores': Param(
+        default=None,
         title='Explitit alignment panelty score',
         description='Comma-delimited string of alignment scores: '
                     'match, mismatch, gap open, gap extend (default: 3,-6,-5,-2)',
         type=['null', 'string']
     ),
     'low_score': Param(
+        default=None,
         title='Alignment Score threshold',
         description='Alignments below this are considered poor.'
                     '(default: set threshold automatically)',
@@ -154,6 +162,21 @@ unicycler_params = {
     )
 }
 
+def build_unicycler_command(params):
+    command = [
+        'unicycler --long {{ params.long_fq }}',
+        '-o {{ params.output_directory }}',
+        '--min_fasta_length {{ params.min_fasta_length }}',
+        '--keep {{ params.keep }} --mode {{params.mode }}',
+        '--linear_seqs {{ params.linear_seqs }}',
+        '{% if params.no_miniasm %}--no_miniasm{% endif %}',
+        '{% if params.no_simple_bridges %}--no_simple_bridges{% endif %}',
+        '{% if params.no_long_read_alignment %}--no_long_read_alignment{% endif %}',
+        '{% if not params.assembly_rotation %}--no_rotate{% endif %}'
+    ]
+
+    return ' '.join(command)
+
 with DAG(
     dag_id='Unicycler_long_read_only',
     default_args=default_args,
@@ -184,12 +207,6 @@ with DAG(
         mount_tmp_dir=False,
         mounts=v_mounts,
         # TODO: Add advance arguments
-        command=' '.join([
-            'unicycler --long {{ params.long_fq }}',
-            '-o {{ params.output_directory }}',
-            '--min_fasta_length {{ params.min_fasta_length }}',
-            '--keep {{ params.keep }} --mode {{ params.mode }}',
-            '--linear_seqs {{ params.linear_seqs }}'
-        ])
+        command=build_unicycler_command(unicycler_params)
     )
     check_unicycler >> assemble

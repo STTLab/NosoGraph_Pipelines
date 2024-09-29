@@ -14,18 +14,20 @@ default_args = {
 # TODO: Update parameter set for running Flye.
 flye_params = {
     'tech': Param(
+        default='nano',
         title='Sequencing Technology',
         description_md='Technology used to generate the reads.\n\n'
                         '- nanopore = Reads produced by Oxford Nanopore sequencer\n'
                         '- pacbio = Reads produced by PacBio sequencer\n',
         type='string',
-        enum=['Nanopore', 'PacBio'],
+        enum=['nano', 'pacbio'],
         values_display={
             'nano': 'Nanopore',
             'pacbio': 'PacBio',
         }
     ),
     'qual': Param(
+        default='raw',
         title='Sequencing Technology',
         description_md='Expected error rate.\n\n'
                         '- raw = <20%% error i.e. PacBio CLR reads or ONT reads, pre-Guppy5\n'
@@ -41,14 +43,15 @@ flye_params = {
             'hq': 'ONT <5%% error (Guppy5+ SUP or Q20)'
         }
     ),
-    'input_fastq': Param(description='FASTQ file containg reads to be assembled.', type='string'),
+    'input_fastq': Param(default='', description='FASTQ file containg reads to be assembled.', type='string'),
     'genome_size': Param(
+        default='',
         title='Genome size',
         description='Estimate genome size for example, 5m or 2.6g.',
         type='string',
     ),
     'output_directory': Param(
-        '',
+        default='',
         title='Output directory',
         description='Output directory (required)',
         type='string'
@@ -61,17 +64,20 @@ flye_params = {
         description='Number of polishing iterations (default: 1)',
     ),
     'min_overlap': Param(
+        default=None,
         type=['null', 'number'],
         minimum=1000,
         title='Minimum overlap',
         description='Minimum overlap between reads (default: auto)',
     ),
     'asm_coverage': Param(
+        default=None,
         type=['null', 'number'],
         title='Reduced coverage',
         description='Reduced coverage for initial disjointig assembly (default: not set)',
     ),
     'read_error': Param(
+        default=None,
         type=['null', 'number'],
         title='Explicit Error rate',
         description='Adjust parameters for given read error rate (as fraction e.g. 0.03) (default: not set)',
@@ -116,34 +122,18 @@ flye_params = {
 }
 
 def build_flye_command(params):
-    command = ['flye']
-    # Check if quality setting matched with technology selected.
-    if params.tech == 'nano' and params.qual == 'hifi':
-        raise ValueError('Hifi cannot be used with Oxford Nanopore.')
-    if params.tech == 'pacbio' and params.qual == 'hq':
-        raise ValueError('HQ cannot be used with PacBio.')
+    return '''flye --{{ params.tech }}-{{ params.qual }} {{ params.input_fastq }}
+    -g {{ params.genome_size }} -o {{ params.output_directory }} -t {{ params.threads }}
+    --iterations {{params.polish_iter}}
+    {% if params.min_overlap %}--min-overlap {{ params.min_overlap }}{% endif %}
+    {% if params.asm_coverage %}--asm-coverage {{ params.asm_coverage }}{% endif %}
+    {% if params.meta_mode %}--meta{% endif %}
+    {% if params.keep_haplotypes %}--keep-haplotypes{% endif %}
+    {% if params.keep_haplotypes %}--keep-haplotypes{% endif %}
+    {% if params.no_alt_contigs %}--no-alt-contigs{% endif %}
+    {% if params.scaffold %}--scaffold{% endif %}
+    '''
 
-    command.extend([f'--{params.tech}-{params.qual}', params.input_fastq])
-    command.extend(['-g', params.genome_size])
-    command.extend(['-o', params.output_directory])
-    command.extend(['-t', str(params.threads)])
-    command.extend(['--iterations', str(params.polish_iter)])
-    if params.min_overlap:
-        command.extend(['--min-overlap', str(params.min_overlap)])
-    if params.asm_coverage:
-        command.extend(['--asm-coverage', str(params.asm_coverage)])
-    if params.meta_mode:
-        command.append('--meta')
-    if params.keep_haplotypes:
-        command.append('--keep-haplotypes')
-    if params.no_alt_contigs:
-        command.append('--no-alt-contigs')
-    if params.scaffold:
-        command.append('--scaffold')
-
-    return command
-
-# TODO: Update command set for running Flye assembly.
 with DAG(
     dag_id='Flye_assembly_single_fastq',
     default_args=default_args,
