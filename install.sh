@@ -10,6 +10,9 @@ fi
 # If Docker is installed, run the docker build command
 echo "Docker is installed. Proceeding with the build."
 
+# get all submodules files
+git submodule update --init
+
 # Customize the path to Dockerfile and image tag as needed
 DOCKERFILE_PATH="./templates/containers/nosograph_assemblers/Dockerfile"
 BUILD_DIR="./templates/containers/nosograph_assemblers"
